@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react'
+
+// @ts-ignore
+import ScrollToBottom from 'react-scroll-to-bottom';
 import './App.css'
 import styled from '@emotion/styled'
+import { css } from '@emotion/css'
 import GreenDot from './shared/GreenDot'
 import defaultMessages from './test/messages'
 import { groupByAuthor } from './shared/util'
@@ -100,7 +104,7 @@ function App() {
           </Online>
           {user && <button onClick={onLogOut}>log out</button>}
         </Header>
-        <Chat>
+        <ScrollToBottom className={chat}>
           {groupedMessages.map((messageBlock) => (
             <MessageBlock
               isSelf={messageBlock.author.id === user?.id}
@@ -108,7 +112,7 @@ function App() {
               messageBlock={messageBlock}
             />
           ))}
-        </Chat>
+        </ScrollToBottom>
         <InputContainer>
           <input
             onKeyDown={handleKeyDown}
@@ -156,10 +160,16 @@ const Online = styled.div`
   }
 `
 
-const Chat = styled.div`
+const chat = css`
   flex: 1;
-  display: flex;
-  flex-flow: column;
+  overflow-y: overlay;
+  > div {
+    display: flex;
+    flex-flow: column;
+  }
+
+  padding-bottom: 20px;
+  
 `
 
 const InputContainer = styled.div`
