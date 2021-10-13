@@ -7,6 +7,7 @@ import { groupByAuthor } from './shared/util'
 import MessageBlock from './shared/MessageBlock'
 import { User, listenForLogin, firebaseLogout } from './network/users'
 import Login from './shared/Login'
+import { createMessage, listenRoom } from './network/rooms'
 
 const defaultAuthor = {
   id: '1',
@@ -16,6 +17,7 @@ const defaultAuthor = {
 }
 
 const CACHED_USER_KEY = 'CACHED_USER_KEY'
+const ROOM_ID = 'wildest-dreams'
 
 function App() {
   const [numOnline, setNumOnline] = useState(15)
@@ -35,6 +37,15 @@ function App() {
     setIsLoading(false)
   }, [])
 
+  useEffect(() => {
+    listenRoom(ROOM_ID, (room) => {
+      const sortedMessages = Object.values(room.messages).sort(
+        (a, b) => a.timestamp - b.timestamp
+      )
+      setMessages(sortedMessages)
+    })
+  }, [])
+
   const groupedMessages = groupByAuthor(messages)
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -48,15 +59,16 @@ function App() {
   }
 
   const onSubmit = () => {
-    setMessages((curr) => [
-      ...curr,
-      {
-        id: Date.now().toString(),
-        author: { ...defaultAuthor },
-        text: currMessage,
-        timestamp: Date.now(),
+    createMessage(ROOM_ID, {
+      id: Date.now().toString(),
+      text: currMessage,
+      timestamp: Date.now(),
+      author: {
+        id: user?.id || '1',
+        name: user?.name || 'Blank',
+        avatarUrl: user?.avatarUrl || 'space.jpg',
       },
-    ])
+    })
 
     setCurrMessage('')
   }
@@ -91,7 +103,7 @@ function App() {
         <Chat>
           {groupedMessages.map((messageBlock) => (
             <MessageBlock
-              isSelf={messageBlock.author.id === defaultAuthor.id}
+              isSelf={messageBlock.author.id === user?.id}
               key={messageBlock.messages[0].id}
               messageBlock={messageBlock}
             />
