@@ -6,7 +6,7 @@ type Message = {
   id: string
   text: string
   timestamp: number // ms since epoch
-  author: string // Name of the user who sent the message
+  authorId: string // The userId of who sent the message
 }
 
 type Room = {
@@ -25,6 +25,7 @@ export function listenRoom(roomId: string, onChange: (room: Room) => void) {
   }
   const roomRef = doc(db, 'rooms', roomId)
   unsubscribe = onSnapshot(roomRef, (snapshot) => {
+    // TODO: Figure out how to fill in User objects
     onChange(snapshot.data() as Room)
   })
 }
