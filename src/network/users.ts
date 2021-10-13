@@ -13,7 +13,7 @@ import {
   signInWithPopup,
 } from 'firebase/auth'
 
-type User = {
+export type User = {
   id: string
   name: string
   avatarUrl: string
