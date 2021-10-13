@@ -5,8 +5,8 @@ import GreenDot from './shared/GreenDot'
 import defaultMessages from './test/messages'
 import { groupByAuthor } from './shared/util'
 import MessageBlock from './shared/MessageBlock'
-import { User, listenForLogin, firebaseLogout } from './network/users';
-import Login from './shared/Login';
+import { User, listenForLogin, firebaseLogout } from './network/users'
+import Login from './shared/Login'
 
 const defaultAuthor = {
   id: '1',
@@ -15,14 +15,14 @@ const defaultAuthor = {
   name: 'tina',
 }
 
-const CACHED_USER_KEY = 'CACHED_USER_KEY';
+const CACHED_USER_KEY = 'CACHED_USER_KEY'
 
 function App() {
   const [numOnline, setNumOnline] = useState(15)
   const [messages, setMessages] = useState(defaultMessages)
   const [currMessage, setCurrMessage] = useState('')
   const [user, setUser] = useState<null | User>(null)
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const cachedUser = localStorage.getItem(CACHED_USER_KEY)
@@ -30,10 +30,10 @@ function App() {
       setUser(JSON.parse(cachedUser))
     }
 
-    listenForLogin(setUser);
+    listenForLogin(setUser)
 
-    setIsLoading(false);
-  }, []);
+    setIsLoading(false)
+  }, [])
 
   const groupedMessages = groupByAuthor(messages)
 
@@ -62,8 +62,8 @@ function App() {
   }
 
   const onLogOut = () => {
-    firebaseLogout();
-    setUser(null);
+    firebaseLogout()
+    setUser(null)
   }
 
   return (
