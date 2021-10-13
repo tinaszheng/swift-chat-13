@@ -4,10 +4,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "prettier": "prettier --write --trailing-comma es5 \"src/*.tsx\" \"src/shared/*.tsx\" \"src/shared/*.ts\" \"src/test/*.ts\""
   },
   "dependencies": {
     "firebase": "^9.1.2",
+    "@emotion/react": "^11.4.1",
+    "@emotion/styled": "^11.3.0",
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
   },
