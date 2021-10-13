@@ -1,10 +1,3 @@
-// type Message = {
-//   id: string
-//   text: string
-//   timestamp: number // ms since epoch
-//   author: string // Name of the user who sent the message
-// }
-
 const message1 = {
   id: '1',
   text: 'tinas message',
