@@ -213,6 +213,7 @@ const EditProfileButton = styled.button`
     border-radius: 50%;
     height: 40px;
     width: 40px;
+    object-fit: cover;
   }
 `
 
