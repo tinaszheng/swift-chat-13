@@ -39,7 +39,7 @@ const EditProfile = ({
   user: User | null
 }) => {
   const [newUser, setNewUser] = useState({
-    avatarUrl: user?.avatarUrl || '',
+    avatarUrl: user?.avatarUrl || 'https://i.pinimg.com/736x/56/41/94/56419465c8df9148f4851bc61232f314.jpg',
     name: user?.name || '',
     description: user?.description || '',
   })

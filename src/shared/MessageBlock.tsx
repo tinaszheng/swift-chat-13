@@ -18,7 +18,7 @@ const Messages = ({
     <Container style={{ alignSelf: isSelf ? 'flex-end' : undefined }}>
       {!isSelf && (
         <Avatar onClick={onAvatarClick}>
-          <img src={user.avatarUrl} alt="User profile" />
+          <img src={user.avatarUrl || "https://i.pinimg.com/736x/56/41/94/56419465c8df9148f4851bc61232f314.jpg"} alt="User profile" />
         </Avatar>
       )}
       <Bubbles style={{ alignItems: isSelf ? 'flex-end' : 'flex-start' }}>
