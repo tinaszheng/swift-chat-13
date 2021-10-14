@@ -14,7 +14,6 @@ export const groupByAuthor = (messages: Message[]) => {
       } else {
         currOutputIndex += 1
         output[currOutputIndex] = {
-
           // @ts-ignore yolo for now
           author: messages[i].author,
           messages: [messages[i]],
@@ -23,7 +22,6 @@ export const groupByAuthor = (messages: Message[]) => {
     } else {
       currOutputIndex += 1
       output[currOutputIndex] = {
-
         // @ts-ignore yolo for now
         author: messages[i].author,
         messages: [messages[i]],

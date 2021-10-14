@@ -14,3 +14,7 @@
 input {
   font-family: 'IM Fell DW Pica', serif;
 }
+
+input:focus, textarea:focus, button:focus {
+  outline: 1px solid pink;
+}

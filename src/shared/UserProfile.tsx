@@ -25,17 +25,33 @@ const customStyles = {
   },
 }
 
-const Profile = ({ isOpen, onClose, user }: { isOpen: boolean, onClose: () => void, user: User | null}) => {
-  if (!user) return null;
-  
+const Profile = ({
+  isOpen,
+  onClose,
+  user,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  user: User | null
+}) => {
+  if (!user) return null
+
   return (
     <Modal style={customStyles} isOpen={isOpen} onRequestClose={onClose}>
       <Content>
-      <img src={user.avatarUrl} alt="user" />
-      <div style={{ fontSize: '24px', marginTop: '20px'}}>{user.name}</div>
-      <div style={{ marginTop: '20px'}}>{user.description || 'no info yet. so mysterious!'}</div>
+        <img
+          src={
+            user.avatarUrl ||
+            'https://i.pinimg.com/736x/56/41/94/56419465c8df9148f4851bc61232f314.jpg'
+          }
+          alt="user"
+        />
+        <div style={{ fontSize: '24px', marginTop: '20px' }}>{user.name}</div>
+        <div style={{ marginTop: '20px' }}>
+          {user.description || 'no info yet. so mysterious!'}
+        </div>
       </Content>
-     
+
       <Button onClick={onClose}>ok</Button>
     </Modal>
   )
@@ -50,7 +66,7 @@ const Content = styled.div`
     width: 100px;
     border-radius: 50%;
   }
-`;
+`
 
 const Button = styled.button`
   margin-top: 20px;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 
 // @ts-ignore
-import ScrollToBottom from 'react-scroll-to-bottom';
+import ScrollToBottom from 'react-scroll-to-bottom'
 import './App.css'
 import styled from '@emotion/styled'
 import { css } from '@emotion/css'
@@ -13,6 +13,7 @@ import { User, listenForLogin, firebaseLogout, getUser } from './network/users'
 import Login from './shared/Login'
 import UserProfile from './shared/UserProfile'
 import { createMessage, listenRoom } from './network/rooms'
+import EditProfile from './shared/EditUserProfile'
 
 const defaultAuthor = {
   id: '1',
@@ -27,11 +28,12 @@ const ROOM_ID = 'wildest-dreams'
 
 function App() {
   const [numOnline, setNumOnline] = useState(15)
-  const [userProfile, setUserProfile] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<User | null>(null)
   const [messages, setMessages] = useState(defaultMessages)
   const [currMessage, setCurrMessage] = useState('')
   const [user, setUser] = useState<null | User>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
 
   useEffect(() => {
     const cachedUser = localStorage.getItem(CACHED_USER_KEY)
@@ -66,8 +68,8 @@ function App() {
   }
 
   const onSetUserProfile = async (userID: string) => {
-    const user = await getUser(userID);
-    setUserProfile(user);
+    const user = await getUser(userID)
+    setUserProfile(user)
   }
 
   const onSubmit = () => {
@@ -78,7 +80,9 @@ function App() {
       author: {
         id: user?.id || '0',
         name: user?.name || 'blonde fan 13',
-        avatarUrl: user?.avatarUrl || 'https://i.pinimg.com/736x/56/41/94/56419465c8df9148f4851bc61232f314.jpg',
+        avatarUrl:
+          user?.avatarUrl ||
+          'https://i.pinimg.com/736x/56/41/94/56419465c8df9148f4851bc61232f314.jpg',
       },
     })
 
@@ -90,10 +94,28 @@ function App() {
     setUser(null)
   }
 
+  const showEditProfile = () => {
+    setIsEditingProfile(true)
+  }
+
   return (
     <div className="App">
       {!isLoading && !user && <Login />}
-      <UserProfile isOpen={Boolean(userProfile)} onClose={() => {setUserProfile(null)}} user={userProfile} />
+      {isEditingProfile && (
+        <EditProfile
+          isOpen
+          onSubmit={setUser}
+          onClose={() => setIsEditingProfile(false)}
+          user={user}
+        />
+      )}
+      <UserProfile
+        isOpen={Boolean(userProfile)}
+        onClose={() => {
+          setUserProfile(null)
+        }}
+        user={userProfile}
+      />
       <div className="video">
         <iframe
           width="100%"
@@ -107,11 +129,15 @@ function App() {
       </div>
       <Right>
         <Header>
-          <Title>the taylor swift virtual clubhouse</Title>
-          <Online>
-            <GreenDot /> {numOnline} swifties online
-          </Online>
-          {user && <button onClick={onLogOut}>log out</button>}
+          <div>
+            <Title>the taylor swift virtual clubhouse</Title>
+            <Online>
+              <GreenDot /> {numOnline} swifties online
+            </Online>
+          </div>
+          <EditProfileButton onClick={showEditProfile}>
+            <img src={user?.avatarUrl} alt="edit your profile" />
+          </EditProfileButton>
         </Header>
         <ScrollToBottom className={chat}>
           {groupedMessages.map((messageBlock) => (
@@ -149,10 +175,7 @@ const Header = styled.div`
   display: flex;
   flex-flow: row;
   justify-content: space-between;
-
-  display: flex;
-  flex-flow: column;
-  align-items: flex-start;
+  align-items: center;
 `
 
 const Title = styled.div`
@@ -180,6 +203,17 @@ const chat = css`
   }
 
   padding-bottom: 20px;
+`
+
+const EditProfileButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  > img {
+    border-radius: 50%;
+    height: 40px;
+    width: 40px;
+  }
 `
 
 const InputContainer = styled.div`
