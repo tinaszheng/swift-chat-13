@@ -3,7 +3,7 @@ import Modal from 'react-modal'
 import styled from '@emotion/styled'
 import CorkImage from '../images/bg-btn.jpg'
 
-import { User, setUser } from '../network/users'
+import { User, setUser, firebaseLogout } from '../network/users'
 import React from 'react'
 
 Modal.setAppElement('#root')
@@ -27,7 +27,7 @@ const customStyles = {
   },
 }
 
-const EditProfile = ({ isOpen, onSubmit, onClose, user }: { onSubmit: (user: User) => void, isOpen: boolean, onClose: () => void, user: User | null}) => {
+const EditProfile = ({ isOpen, onSubmit, onClose, user }: { onSubmit: (user: User | null) => void, isOpen: boolean, onClose: () => void, user: User | null}) => {
   const [newUser, setNewUser] = useState({ 
       avatarUrl: user?.avatarUrl || "",
       name: user?.name || "",
@@ -49,6 +49,12 @@ const EditProfile = ({ isOpen, onSubmit, onClose, user }: { onSubmit: (user: Use
       onClose();
   };
 
+  const onLogOut = () => {
+    firebaseLogout()
+    onSubmit(null)
+    close()
+  }
+
   const onFieldChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setNewUser(prev => ({
         ...prev,
@@ -65,6 +71,7 @@ const EditProfile = ({ isOpen, onSubmit, onClose, user }: { onSubmit: (user: Use
       <textarea rows={8} placeholder="about you. feel free to plug your ig/tiktok/discord here" value={newUser.description} onChange={onFieldChange("description")} />
       </Content>
       <Button onClick={onSave}>save</Button>
+      <LogOut onClick={onLogOut}>log out</LogOut>
     </Modal>
   )
 }
@@ -105,6 +112,18 @@ const Button = styled.button`
 
   display: flex;
   align-items: center;
+`
+
+const LogOut = styled.button`
+  background: none;
+  border: none;
+  margin-top: 20px;
+  cursor: pointer;
+  font-style: italic;
+  font-family: IM Fell DW Pica, serif;
+  color: #7D7C7C;
+  font-size: 18px;
+;
 `
 
 export default EditProfile
