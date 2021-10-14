@@ -3,19 +3,20 @@ import styled from '@emotion/styled'
 import moment from 'moment';
 import { MessageBlock, Message } from './types'
 
-
 // a MessageBlock is a group of chat messages from the same user that should be displayed as a continuous block
 const Messages = ({
   messageBlock,
   isSelf = false,
+  onAvatarClick,
 }: {
   messageBlock: MessageBlock
   isSelf?: boolean
+  onAvatarClick: () => void,
 }) => {
   const user = messageBlock.author
   return (
     <Container style={{ alignSelf: isSelf ? 'flex-end' : undefined }}>
-      {!isSelf && <img src={user.avatarUrl} alt="User profile" />}
+      {!isSelf && <Avatar onClick={onAvatarClick}><img src={user.avatarUrl} alt="User profile" /></Avatar>}
       <Bubbles style={{ alignItems: isSelf ? 'flex-end' : 'flex-start' }}>
         {!isSelf && <Name>{user.name}</Name>}
         {messageBlock.messages.map((msg: Message) => (
@@ -25,6 +26,12 @@ const Messages = ({
     </Container>
   )
 }
+
+const Avatar = styled.button`
+    cursor: pointer;
+    background: none;
+    border: none;
+`;
 
 const BubbleContainer = ({ isSelf, text, ts }: {isSelf: boolean, text: string, ts: number}) => {
     const [showTimestamp, setShowTimestamp] = useState(false);
@@ -59,7 +66,7 @@ const Container = styled.div`
   flex-flow: row;
   align-items: flex-end;
 
-  > img {
+  img {
     height: 25px;
     width: 25px;
     border-radius: 50%;

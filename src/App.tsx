@@ -9,8 +9,9 @@ import GreenDot from './shared/GreenDot'
 import defaultMessages from './test/messages'
 import { groupByAuthor } from './shared/util'
 import MessageBlock from './shared/MessageBlock'
-import { User, listenForLogin, firebaseLogout } from './network/users'
+import { User, listenForLogin, firebaseLogout, getUser } from './network/users'
 import Login from './shared/Login'
+import UserProfile from './shared/UserProfile'
 import { createMessage, listenRoom } from './network/rooms'
 
 const defaultAuthor = {
@@ -18,6 +19,7 @@ const defaultAuthor = {
   avatarUrl:
     'https://i.pinimg.com/736x/56/41/94/56419465c8df9148f4851bc61232f314.jpg',
   name: 'tina',
+  description: '25 | she/her | san francisco, ca',
 }
 
 const CACHED_USER_KEY = 'CACHED_USER_KEY'
@@ -25,6 +27,7 @@ const ROOM_ID = 'wildest-dreams'
 
 function App() {
   const [numOnline, setNumOnline] = useState(15)
+  const [userProfile, setUserProfile] = useState<User | null>(null);
   const [messages, setMessages] = useState(defaultMessages)
   const [currMessage, setCurrMessage] = useState('')
   const [user, setUser] = useState<null | User>(null)
@@ -62,6 +65,11 @@ function App() {
     setCurrMessage(e.target.value)
   }
 
+  const onSetUserProfile = async (userID: string) => {
+    const user = await getUser(userID);
+    setUserProfile(user);
+  }
+
   const onSubmit = () => {
     createMessage(ROOM_ID, {
       id: Date.now().toString(),
@@ -85,6 +93,7 @@ function App() {
   return (
     <div className="App">
       {!isLoading && !user && <Login />}
+      <UserProfile isOpen={Boolean(userProfile)} onClose={() => {setUserProfile(null)}} user={userProfile} />
       <div className="video">
         <iframe
           width="100%"
@@ -107,6 +116,7 @@ function App() {
         <ScrollToBottom className={chat}>
           {groupedMessages.map((messageBlock) => (
             <MessageBlock
+              onAvatarClick={() => onSetUserProfile(messageBlock.author.id)}
               isSelf={messageBlock.author.id === user?.id}
               key={messageBlock.messages[0].id}
               messageBlock={messageBlock}
