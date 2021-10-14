@@ -32,7 +32,7 @@ export async function getUser(userId: string) {
   return docSnap.data() as User
 }
 
-async function setUser(userId: string, user: User) {
+export async function setUser(userId: string, user: User) {
   await setDoc(doc(db, 'users', userId), user)
 }
 

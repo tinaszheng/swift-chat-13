@@ -31,6 +31,10 @@ const Avatar = styled.button`
     cursor: pointer;
     background: none;
     border: none;
+
+    display: flex;
+    align-items: center;
+    margin: 0 8px;
 `;
 
 const BubbleContainer = ({ isSelf, text, ts }: {isSelf: boolean, text: string, ts: number}) => {
@@ -70,7 +74,6 @@ const Container = styled.div`
     height: 25px;
     width: 25px;
     border-radius: 50%;
-    margin: 0 8px;
   }
 
   margin-top: 15px;
