@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from 'react'
 import Modal from 'react-modal'
 import styled from '@emotion/styled'
 import CorkImage from '../images/bg-btn.jpg'
@@ -27,27 +27,37 @@ const customStyles = {
   },
 }
 
-const EditProfile = ({ isOpen, onSubmit, onClose, user }: { onSubmit: (user: User | null) => void, isOpen: boolean, onClose: () => void, user: User | null}) => {
-  const [newUser, setNewUser] = useState({ 
-      avatarUrl: user?.avatarUrl || "",
-      name: user?.name || "",
-      description: user?.description || "",
-   });
+const EditProfile = ({
+  isOpen,
+  onSubmit,
+  onClose,
+  user,
+}: {
+  onSubmit: (user: User | null) => void
+  isOpen: boolean
+  onClose: () => void
+  user: User | null
+}) => {
+  const [newUser, setNewUser] = useState({
+    avatarUrl: user?.avatarUrl || '',
+    name: user?.name || '',
+    description: user?.description || '',
+  })
 
   const onSave = () => {
-      if (!user) return;
-      const updatedUser = ({
-        ...newUser,
-        id: user.id,
-        email: user.email,
-        createTime: user.createTime,
-        lastUpdateTime: user.lastUpdateTime
-      })
+    if (!user) return
+    const updatedUser = {
+      ...newUser,
+      id: user.id,
+      email: user.email,
+      createTime: user.createTime,
+      lastUpdateTime: user.lastUpdateTime,
+    }
 
-      setUser(user.id, updatedUser);
-      onSubmit(updatedUser);
-      onClose();
-  };
+    setUser(user.id, updatedUser)
+    onSubmit(updatedUser)
+    onClose()
+  }
 
   const onLogOut = () => {
     firebaseLogout()
@@ -55,20 +65,31 @@ const EditProfile = ({ isOpen, onSubmit, onClose, user }: { onSubmit: (user: Use
     close()
   }
 
-  const onFieldChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setNewUser(prev => ({
+  const onFieldChange =
+    (field: string) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setNewUser((prev) => ({
         ...prev,
         [field]: e.target.value,
-    }))
-  };
+      }))
+    }
 
-  if (!user) return null;
+  if (!user) return null
   return (
     <Modal style={customStyles} isOpen={isOpen} onRequestClose={onClose}>
       <Content>
-      <img src={newUser.avatarUrl} alt="user" />
-      <input placeholder="Display name" value={newUser.name} onChange={onFieldChange("name")} />
-      <textarea rows={8} placeholder="about you. feel free to plug your ig/tiktok/discord here" value={newUser.description} onChange={onFieldChange("description")} />
+        <img src={newUser.avatarUrl} alt="user" />
+        <input
+          placeholder="Display name"
+          value={newUser.name}
+          onChange={onFieldChange('name')}
+        />
+        <textarea
+          rows={8}
+          placeholder="about you. feel free to plug your ig/tiktok/discord here"
+          value={newUser.description}
+          onChange={onFieldChange('description')}
+        />
       </Content>
       <Button onClick={onSave}>save</Button>
       <LogOut onClick={onLogOut}>log out</LogOut>
@@ -85,19 +106,20 @@ const Content = styled.div`
     width: 100px;
     border-radius: 50%;
   }
-  > input, textarea {
-      min-width: 300px;
-      width: 100%;
-      margin-top: 30px;
-      border: none;
-      padding: 20px;
-      font-family: IM Fell DW Pica, serif;
+  > input,
+  textarea {
+    min-width: 300px;
+    width: 100%;
+    margin-top: 30px;
+    border: none;
+    padding: 20px;
+    font-family: IM Fell DW Pica, serif;
   }
 
   > textarea {
-      resize: none;
+    resize: none;
   }
-`;
+`
 
 const Button = styled.button`
   margin-top: 20px;
@@ -121,9 +143,8 @@ const LogOut = styled.button`
   cursor: pointer;
   font-style: italic;
   font-family: IM Fell DW Pica, serif;
-  color: #7D7C7C;
-  font-size: 18px;
-;
+  color: #7d7c7c;
+  font-size: 18px; ;
 `
 
 export default EditProfile
