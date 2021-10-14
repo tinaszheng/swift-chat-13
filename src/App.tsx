@@ -68,9 +68,9 @@ function App() {
       text: currMessage,
       timestamp: Date.now(),
       author: {
-        id: user?.id || '1',
-        name: user?.name || 'Blank',
-        avatarUrl: user?.avatarUrl || 'space.jpg',
+        id: user?.id || '0',
+        name: user?.name || 'blonde fan 13',
+        avatarUrl: user?.avatarUrl || 'https://i.pinimg.com/736x/56/41/94/56419465c8df9148f4851bc61232f314.jpg',
       },
     })
 
@@ -89,7 +89,7 @@ function App() {
         <iframe
           width="100%"
           height="100%"
-          src="https://www.youtube-nocookie.com/embed/videoseries?list=PLD9KBjmKSTfEM6LsQgu2aY7CQcSOSWARL&autoplay=1&start=903"
+          src="https://www.youtube-nocookie.com/embed/videoseries?list=PLD9KBjmKSTfEM6LsQgu2aY7CQcSOSWARL&autoplay=1&start=5"
           title="YouTube video player"
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -115,6 +115,7 @@ function App() {
         </ScrollToBottom>
         <InputContainer>
           <input
+            placeholder="Send a message"
             onKeyDown={handleKeyDown}
             value={currMessage}
             onChange={onChatInput}
@@ -169,7 +170,6 @@ const chat = css`
   }
 
   padding-bottom: 20px;
-  
 `
 
 const InputContainer = styled.div`
