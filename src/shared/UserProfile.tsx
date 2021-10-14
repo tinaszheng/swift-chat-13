@@ -46,12 +46,11 @@ const Profile = ({
           }
           alt="user"
         />
-        <div style={{ fontSize: '24px', marginTop: '20px' }}>{user.name}</div>
+        <div style={{ fontSize: '32px', marginTop: '20px', fontStyle: 'italic'}}>{user.name}</div>
         <div style={{ marginTop: '20px' }}>
           {user.description || 'no info yet. so mysterious!'}
         </div>
       </Content>
-
       <Button onClick={onClose}>ok</Button>
     </Modal>
   )
