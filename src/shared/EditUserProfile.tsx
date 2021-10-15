@@ -3,7 +3,7 @@ import Modal from 'react-modal'
 import styled from '@emotion/styled'
 import CorkImage from '../images/bg-btn.jpg'
 
-import { User, setUser, firebaseLogout } from '../network/users'
+import { User, setUser, firebaseLogout, uploadData } from '../network/users'
 import React from 'react'
 
 Modal.setAppElement('#root')
@@ -76,11 +76,25 @@ const EditProfile = ({
       }))
     }
 
+  async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Optional: immediately preview the image by converting to a local data URL
+    // setNewUser((prev) => ({ ...prev, avatarUrl: URL.createObjectURL(file) }))
+
+    // Then upload the image to Firebase Storage
+    const avatarUrl = await uploadData(`avatars/${user.id}.jpg`, file)
+    setNewUser((prev) => ({ ...prev, avatarUrl }))
+    // TODO: Show some kind of loading indicator while the file is uploading
+  }
+
   if (!user) return null
   return (
     <Modal style={customStyles} isOpen={isOpen} onRequestClose={onClose}>
       <Content>
         <img src={newUser.avatarUrl} alt="user" />
+        <input onChange={onFileChange} type="file" accept="image/*" />
         <input
           placeholder="Display name"
           value={newUser.name}
@@ -107,6 +121,7 @@ const Content = styled.div`
     height: 100px;
     width: 100px;
     border-radius: 50%;
+    object-fit: cover;
   }
   > input,
   textarea {

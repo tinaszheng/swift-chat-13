@@ -64,6 +64,7 @@ const Content = styled.div`
     height: 100px;
     width: 100px;
     border-radius: 50%;
+    object-fit: cover;
   }
 `
 
