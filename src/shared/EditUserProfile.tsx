@@ -77,8 +77,8 @@ const EditProfile = ({
     }
 
   async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files[0]
-    if (!file) return
+    const file = e.target.files ? e.target.files[0] : null;
+    if (!file || !user) return
 
     // Optional: immediately preview the image by converting to a local data URL
     // setNewUser((prev) => ({ ...prev, avatarUrl: URL.createObjectURL(file) }))
@@ -93,8 +93,8 @@ const EditProfile = ({
   return (
     <Modal style={customStyles} isOpen={isOpen} onRequestClose={onClose}>
       <Content>
-        <img src={newUser.avatarUrl} alt="user" />
-        <input onChange={onFileChange} type="file" accept="image/*" />
+        <label htmlFor="file-input"><img src={newUser.avatarUrl} alt="user" /></label>
+        <input id="file-input" style={{ display: "none" }} onChange={onFileChange} type="file" accept="image/*" />
         <input
           placeholder="Display name"
           value={newUser.name}
@@ -117,12 +117,7 @@ const Content = styled.div`
   display: flex;
   flex-flow: column;
   align-items: center;
-  > img {
-    height: 100px;
-    width: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
+
   > input,
   textarea {
     min-width: 300px;
@@ -135,6 +130,20 @@ const Content = styled.div`
 
   > textarea {
     resize: none;
+  }
+
+  > label {
+    img {
+      height: 100px;
+      width: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    &:hover {
+      cursor: pointer;
+      opacity: 0.5;
+    }
   }
 `
 
