@@ -1,7 +1,7 @@
 import { app } from './init'
 import { getFirestore, onSnapshot, doc, updateDoc } from 'firebase/firestore'
 import { Unsubscribe } from '@firebase/util'
-import { Room, Message, Author } from '../shared/types'
+import { Room, Message } from '../shared/types'
 
 const db = getFirestore(app)
 
