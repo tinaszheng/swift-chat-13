@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 // @ts-ignore
 import ScrollToBottom from 'react-scroll-to-bottom'
@@ -12,8 +12,15 @@ import MessageBlock from './shared/MessageBlock'
 import { User, listenForLogin, firebaseLogout, getUser } from './network/users'
 import Login from './shared/Login'
 import UserProfile from './shared/UserProfile'
-import { createMessage, listenRoom } from './network/rooms'
 import EditProfile from './shared/EditUserProfile'
+import {
+  createMessage,
+  currentlyTyping,
+  debouncedRegisterKeystroke,
+  listenRoom,
+  registerUser,
+} from './network/rooms'
+import { Room } from './shared/types'
 
 const defaultAuthor = {
   id: '1',
@@ -26,14 +33,21 @@ const defaultAuthor = {
 const CACHED_USER_KEY = 'CACHED_USER_KEY'
 const ROOM_ID = 'wildest-dreams'
 
+let TYPING_TIMEOUT_ID: any
+
 function App() {
   const [numOnline, setNumOnline] = useState(15)
   const [userProfile, setUserProfile] = useState<User | null>(null)
+  // TODO: Can remove this now that we track messages
   const [messages, setMessages] = useState(defaultMessages)
   const [currMessage, setCurrMessage] = useState('')
+  const [typingIndicator, setTypingIndicator] = useState('')
   const [user, setUser] = useState<null | User>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [room, setRoom] = useState<null | Room>(null)
+  const roomRef = useRef(room)
+  roomRef.current = room
 
   useEffect(() => {
     const cachedUser = localStorage.getItem(CACHED_USER_KEY)
@@ -41,7 +55,15 @@ function App() {
       setUser(JSON.parse(cachedUser))
     }
 
-    listenForLogin(setUser)
+    listenForLogin((user) => {
+      setUser(user)
+      // Hide email and other sensitive info
+      registerUser(ROOM_ID, {
+        id: user.id,
+        name: user.name,
+        avatarUrl: user.avatarUrl,
+      })
+    })
 
     setIsLoading(false)
   }, [])
@@ -52,8 +74,26 @@ function App() {
         (a, b) => a.timestamp - b.timestamp
       )
       setMessages(sortedMessages)
+      setRoom(room)
     })
   }, [])
+
+  // Once called, rerun every 1s until there are no more people typing
+  function rerenderTypingIndicator() {
+    clearTimeout(TYPING_TIMEOUT_ID)
+    TYPING_TIMEOUT_ID = setTimeout(() => {
+      const typingIndicator = currentlyTyping(roomRef.current)
+      setTypingIndicator(typingIndicator)
+      if (typingIndicator) {
+        rerenderTypingIndicator()
+      }
+    }, 1000)
+  }
+
+  // Whenever lastKeystrokes change, start rerendering typing indicator
+  useEffect(() => {
+    rerenderTypingIndicator()
+  }, [room?.lastKeystrokes])
 
   const groupedMessages = groupByAuthor(messages)
 
@@ -65,6 +105,7 @@ function App() {
 
   const onChatInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCurrMessage(e.target.value)
+    debouncedRegisterKeystroke(ROOM_ID, user?.id || '')
   }
 
   const onSetUserProfile = async (userID: string) => {
