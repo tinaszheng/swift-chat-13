@@ -20,6 +20,7 @@ import {
 } from './network/rooms'
 import { Room } from './shared/types'
 import { throttle } from 'lodash'
+import { listenForPresence, registerPresence } from './network/presence'
 
 const CACHED_USER_KEY = 'CACHED_USER_KEY'
 const ROOM_ID = 'wildest-dreams'
@@ -58,9 +59,14 @@ function App() {
         name: user.name,
         avatarUrl: user.avatarUrl,
       })
+      registerPresence(user.id)
     })
 
     setIsLoading(false)
+  }, [])
+
+  useEffect(() => {
+    listenForPresence((userIds) => setNumOnline(userIds.length))
   }, [])
 
   useEffect(() => listenRoom(ROOM_ID, setRoom), [])
