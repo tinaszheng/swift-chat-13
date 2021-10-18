@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 // @ts-ignore
 import ScrollToBottom from 'react-scroll-to-bottom'
@@ -6,34 +6,44 @@ import './App.css'
 import styled from '@emotion/styled'
 import { css } from '@emotion/css'
 import GreenDot from './shared/GreenDot'
-import defaultMessages from './test/messages'
-import { groupByAuthor } from './shared/util'
+import { groupByAuthor, currentlyTyping, onlineUserIds } from './shared/util'
 import MessageBlock from './shared/MessageBlock'
 import { User, listenForLogin, firebaseLogout, getUser } from './network/users'
 import Login from './shared/Login'
 import UserProfile from './shared/UserProfile'
-import { createMessage, listenRoom } from './network/rooms'
 import EditProfile from './shared/EditUserProfile'
-
-const defaultAuthor = {
-  id: '1',
-  avatarUrl:
-    'https://i.pinimg.com/736x/56/41/94/56419465c8df9148f4851bc61232f314.jpg',
-  name: 'tina',
-  description: '25 | she/her | san francisco, ca',
-}
+import {
+  createMessage,
+  registerKeystroke,
+  listenRoom,
+  registerUser,
+} from './network/rooms'
+import { Room } from './shared/types'
+import { throttle } from 'lodash'
 
 const CACHED_USER_KEY = 'CACHED_USER_KEY'
 const ROOM_ID = 'wildest-dreams'
 
+let TYPING_TIMEOUT_ID: number
+let PRESENCE_TIMEOUT_ID: number
+
+const throttledRegisterKeystroke = throttle(registerKeystroke, 3000, {
+  leading: true,
+  trailing: true,
+})
+
 function App() {
   const [numOnline, setNumOnline] = useState(15)
   const [userProfile, setUserProfile] = useState<User | null>(null)
-  const [messages, setMessages] = useState(defaultMessages)
   const [currMessage, setCurrMessage] = useState('')
+  const [typingIndicator, setTypingIndicator] = useState('')
   const [user, setUser] = useState<null | User>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [room, setRoom] = useState<null | Room>(null)
+  // We need a ref to use room in closures (e.g. for setTimeout)
+  const roomRef = useRef(room)
+  roomRef.current = room
 
   useEffect(() => {
     const cachedUser = localStorage.getItem(CACHED_USER_KEY)
@@ -41,21 +51,46 @@ function App() {
       setUser(JSON.parse(cachedUser))
     }
 
-    listenForLogin(setUser)
+    listenForLogin((user) => {
+      setUser(user)
+      // Hide email and other sensitive info
+      registerUser(ROOM_ID, {
+        id: user.id,
+        name: user.name,
+        avatarUrl: user.avatarUrl,
+        lastLogin: Date.now(),
+      })
+    })
 
     setIsLoading(false)
   }, [])
 
-  useEffect(() => {
-    listenRoom(ROOM_ID, (room) => {
-      const sortedMessages = Object.values(room.messages).sort(
-        (a, b) => a.timestamp - b.timestamp
-      )
-      setMessages(sortedMessages)
-    })
-  }, [])
+  useEffect(() => listenRoom(ROOM_ID, setRoom), [])
 
-  const groupedMessages = groupByAuthor(messages)
+  // Once called, rerun every 1s until there are no more people typing
+  function rerenderTypingIndicator() {
+    clearTimeout(TYPING_TIMEOUT_ID)
+    const typingIndicator = currentlyTyping(roomRef.current, user?.id)
+    setTypingIndicator(typingIndicator)
+    if (typingIndicator) {
+      TYPING_TIMEOUT_ID = window.setTimeout(rerenderTypingIndicator, 1000)
+    }
+  }
+  useEffect(rerenderTypingIndicator, [room?.lastKeystrokes])
+
+  // Once called, rerun every 10s forever
+  function rerenderPresence() {
+    clearTimeout(PRESENCE_TIMEOUT_ID)
+    const online = onlineUserIds(roomRef.current, user?.id)
+    setNumOnline(online.length)
+    PRESENCE_TIMEOUT_ID = window.setTimeout(rerenderPresence, 10 * 1000)
+  }
+  useEffect(rerenderPresence, [room?.lastKeystrokes, room?.users])
+
+  const sortedMessages = Object.values(room?.messages || {}).sort(
+    (a, b) => a.timestamp - b.timestamp
+  )
+  const groupedMessages = groupByAuthor(sortedMessages)
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -65,6 +100,7 @@ function App() {
 
   const onChatInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCurrMessage(e.target.value)
+    throttledRegisterKeystroke(ROOM_ID, user?.id || '')
   }
 
   const onSetUserProfile = async (userID: string) => {
@@ -132,7 +168,7 @@ function App() {
           <div>
             <Title>the taylor swift virtual clubhouse</Title>
             <Online>
-              <GreenDot /> {numOnline} swifties online
+              <GreenDot /> {numOnline} swifties online &nbsp; {typingIndicator}
             </Online>
           </div>
           <EditProfileButton onClick={showEditProfile}>
