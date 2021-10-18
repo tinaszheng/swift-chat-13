@@ -14,16 +14,22 @@ import UserProfile from './shared/UserProfile'
 import EditProfile from './shared/EditUserProfile'
 import {
   createMessage,
-  debouncedRegisterKeystroke,
+  registerKeystroke,
   listenRoom,
   registerUser,
 } from './network/rooms'
 import { Room } from './shared/types'
+import { throttle } from 'lodash'
 
 const CACHED_USER_KEY = 'CACHED_USER_KEY'
 const ROOM_ID = 'wildest-dreams'
 
 let TYPING_TIMEOUT_ID: any
+
+const throttledRegisterKeystroke = throttle(registerKeystroke, 3000, {
+  leading: true,
+  trailing: true,
+})
 
 function App() {
   const [numOnline, setNumOnline] = useState(15)
@@ -34,6 +40,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [room, setRoom] = useState<null | Room>(null)
+  // We need a ref to use room in closures (e.g. for setTimeout)
   const roomRef = useRef(room)
   roomRef.current = room
 
@@ -84,7 +91,7 @@ function App() {
 
   const onChatInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCurrMessage(e.target.value)
-    debouncedRegisterKeystroke(ROOM_ID, user?.id || '')
+    throttledRegisterKeystroke(ROOM_ID, user?.id || '')
   }
 
   const onSetUserProfile = async (userID: string) => {

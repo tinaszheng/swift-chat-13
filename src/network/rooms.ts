@@ -2,7 +2,6 @@ import { app } from './init'
 import { getFirestore, onSnapshot, doc, updateDoc } from 'firebase/firestore'
 import { Unsubscribe } from '@firebase/util'
 import { Room, Message } from '../shared/types'
-import { throttle } from 'lodash'
 
 const db = getFirestore(app)
 
@@ -35,14 +34,9 @@ export function registerUser(roomId: string, user: Author) {
   })
 }
 
-async function registerKeystroke(roomId: string, userId: string) {
+export async function registerKeystroke(roomId: string, userId: string) {
   const roomRef = doc(db, 'rooms', roomId)
   await updateDoc(roomRef, {
     [`lastKeystrokes.${userId}`]: Date.now(),
   })
 }
-
-export const debouncedRegisterKeystroke = throttle(registerKeystroke, 3000, {
-  leading: true,
-  trailing: true,
-})
