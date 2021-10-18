@@ -71,13 +71,11 @@ function App() {
   // Once called, rerun every 1s until there are no more people typing
   function rerenderTypingIndicator() {
     clearTimeout(TYPING_TIMEOUT_ID)
-    TYPING_TIMEOUT_ID = setTimeout(() => {
-      const typingIndicator = currentlyTyping(roomRef.current)
-      setTypingIndicator(typingIndicator)
-      if (typingIndicator) {
-        rerenderTypingIndicator()
-      }
-    }, 1000)
+    const typingIndicator = currentlyTyping(roomRef.current)
+    setTypingIndicator(typingIndicator)
+    if (typingIndicator) {
+      TYPING_TIMEOUT_ID = setTimeout(rerenderTypingIndicator, 1000)
+    }
   }
 
   // Whenever lastKeystrokes change, start rerendering typing indicator
@@ -163,9 +161,8 @@ function App() {
         <Header>
           <div>
             <Title>the taylor swift virtual clubhouse</Title>
-            <Title>typing: {typingIndicator}</Title>
             <Online>
-              <GreenDot /> {numOnline} swifties online
+              <GreenDot /> {numOnline} swifties online &nbsp; {typingIndicator}
             </Online>
           </div>
           <EditProfileButton onClick={showEditProfile}>

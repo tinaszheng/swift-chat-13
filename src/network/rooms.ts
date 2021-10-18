@@ -24,6 +24,7 @@ export async function createMessage(roomId: string, message: Message) {
   const roomRef = doc(db, 'rooms', roomId)
   await updateDoc(roomRef, {
     [`messages.${message.id}`]: message,
+    [`lastKeystrokes.${message.author.id}`]: message.timestamp,
   })
 }
 
@@ -46,14 +47,27 @@ export const debouncedRegisterKeystroke = throttle(registerKeystroke, 3000, {
   trailing: true,
 })
 
+// Return a map of userIds to the last time they posted a message
+function getLastMessages(room: Room) {
+  return Object.values(room.messages || {}).reduce((acc, message) => {
+    if (message.author) {
+      const { id } = message.author
+      acc[id] = Math.max(message.timestamp, acc[id] || 0)
+    }
+    return acc
+  }, {} as { [userId: string]: number })
+}
+
 // Return a list of people who have typed in the last 4 seconds
 export function currentlyTyping(room: null | Room) {
   if (!room) return []
+  const lastMessages = getLastMessages(room)
   const typers = Object.entries(room.lastKeystrokes)
-    .filter(([userId, timestamp]) => Date.now() - timestamp < 4000)
-    // TODO: Filter out people who have posted a message in the last 4 seconds
+    .filter(([userId, lastKeystroke]) => Date.now() - lastKeystroke < 4000)
+    // Exclude anyone who just posted a message
+    .filter(([userId, lastKeystroke]) => lastKeystroke !== lastMessages[userId])
     // TODO: Exclude self
-    .map(([userId, timestamp]) => room.users[userId].name)
+    .map(([userId, lastKeystroke]) => room.users[userId].name)
     .map((fullName) => fullName.split(' ')[0])
 
   // Construct a sentence like "John, Jane, & Bob are typing..."

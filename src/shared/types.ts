@@ -2,7 +2,7 @@ export type Message = {
   id: string
   text: string
   timestamp: number // ms since epoch
-  author?: Author
+  author: Author
 }
 
 export type Room = {
