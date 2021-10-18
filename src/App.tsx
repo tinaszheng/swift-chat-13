@@ -6,8 +6,7 @@ import './App.css'
 import styled from '@emotion/styled'
 import { css } from '@emotion/css'
 import GreenDot from './shared/GreenDot'
-import defaultMessages from './test/messages'
-import { groupByAuthor } from './shared/util'
+import { groupByAuthor, currentlyTyping } from './shared/util'
 import MessageBlock from './shared/MessageBlock'
 import { User, listenForLogin, firebaseLogout, getUser } from './network/users'
 import Login from './shared/Login'
@@ -15,20 +14,11 @@ import UserProfile from './shared/UserProfile'
 import EditProfile from './shared/EditUserProfile'
 import {
   createMessage,
-  currentlyTyping,
   debouncedRegisterKeystroke,
   listenRoom,
   registerUser,
 } from './network/rooms'
 import { Room } from './shared/types'
-
-const defaultAuthor = {
-  id: '1',
-  avatarUrl:
-    'https://i.pinimg.com/736x/56/41/94/56419465c8df9148f4851bc61232f314.jpg',
-  name: 'tina',
-  description: '25 | she/her | san francisco, ca',
-}
 
 const CACHED_USER_KEY = 'CACHED_USER_KEY'
 const ROOM_ID = 'wildest-dreams'
@@ -71,7 +61,7 @@ function App() {
   // Once called, rerun every 1s until there are no more people typing
   function rerenderTypingIndicator() {
     clearTimeout(TYPING_TIMEOUT_ID)
-    const typingIndicator = currentlyTyping(roomRef.current)
+    const typingIndicator = currentlyTyping(roomRef.current, user?.id)
     setTypingIndicator(typingIndicator)
     if (typingIndicator) {
       TYPING_TIMEOUT_ID = setTimeout(rerenderTypingIndicator, 1000)
