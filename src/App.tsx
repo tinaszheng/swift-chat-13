@@ -38,8 +38,6 @@ let TYPING_TIMEOUT_ID: any
 function App() {
   const [numOnline, setNumOnline] = useState(15)
   const [userProfile, setUserProfile] = useState<User | null>(null)
-  // TODO: Can remove this now that we track messages
-  const [messages, setMessages] = useState(defaultMessages)
   const [currMessage, setCurrMessage] = useState('')
   const [typingIndicator, setTypingIndicator] = useState('')
   const [user, setUser] = useState<null | User>(null)
@@ -68,15 +66,7 @@ function App() {
     setIsLoading(false)
   }, [])
 
-  useEffect(() => {
-    listenRoom(ROOM_ID, (room) => {
-      const sortedMessages = Object.values(room.messages).sort(
-        (a, b) => a.timestamp - b.timestamp
-      )
-      setMessages(sortedMessages)
-      setRoom(room)
-    })
-  }, [])
+  useEffect(() => listenRoom(ROOM_ID, setRoom), [])
 
   // Once called, rerun every 1s until there are no more people typing
   function rerenderTypingIndicator() {
@@ -91,11 +81,12 @@ function App() {
   }
 
   // Whenever lastKeystrokes change, start rerendering typing indicator
-  useEffect(() => {
-    rerenderTypingIndicator()
-  }, [room?.lastKeystrokes])
+  useEffect(rerenderTypingIndicator, [room?.lastKeystrokes])
 
-  const groupedMessages = groupByAuthor(messages)
+  const sortedMessages = Object.values(room?.messages || {}).sort(
+    (a, b) => a.timestamp - b.timestamp
+  )
+  const groupedMessages = groupByAuthor(sortedMessages)
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
