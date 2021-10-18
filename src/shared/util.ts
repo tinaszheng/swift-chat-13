@@ -70,3 +70,20 @@ export function currentlyTyping(room: null | Room, selfId: undefined | string) {
       )} are typing...`
   }
 }
+
+// Ghetto implementation of presence, by defining "online user" as
+// logged in or posted a keystroke in the last 2 minutes
+export function onlineUserIds(room: null | Room, selfId: undefined | string) {
+  if (!room) return []
+  const others = Object.values(room.users)
+    .filter((user) => user.id !== selfId)
+    .filter((user) => {
+      const lastKeystroke = room.lastKeystrokes[user.id] || 0
+      const lastLogin = user.lastLogin || 0
+      const lastActive = Math.max(lastKeystroke, lastLogin)
+      return Date.now() - lastActive < 2 * 60 * 1000
+    })
+    .map((user) => user.id)
+  // Always include self as online, and as the first user
+  return [selfId, ...others]
+}
