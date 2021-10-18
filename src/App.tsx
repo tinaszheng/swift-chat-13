@@ -163,6 +163,7 @@ function App() {
         <Header>
           <div>
             <Title>the taylor swift virtual clubhouse</Title>
+            <Title>typing: {typingIndicator}</Title>
             <Online>
               <GreenDot /> {numOnline} swifties online
             </Online>

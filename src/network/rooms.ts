@@ -2,6 +2,7 @@ import { app } from './init'
 import { getFirestore, onSnapshot, doc, updateDoc } from 'firebase/firestore'
 import { Unsubscribe } from '@firebase/util'
 import { Room, Message } from '../shared/types'
+import { throttle } from 'lodash'
 
 const db = getFirestore(app)
 
@@ -33,14 +34,6 @@ export function registerUser(roomId: string, user: Author) {
   })
 }
 
-function debounce(func: Function, windowMs = 300) {
-  let timeout: number
-  return (...args: any[]) => {
-    clearTimeout(timeout)
-    timeout = window.setTimeout(() => func(...args), windowMs)
-  }
-}
-
 async function registerKeystroke(roomId: string, userId: string) {
   const roomRef = doc(db, 'rooms', roomId)
   await updateDoc(roomRef, {
@@ -48,9 +41,10 @@ async function registerKeystroke(roomId: string, userId: string) {
   })
 }
 
-// TODO: Should use lodash leading & maxWait = 3 seconds
-// Aka should use throttle
-export const debouncedRegisterKeystroke = debounce(registerKeystroke)
+export const debouncedRegisterKeystroke = throttle(registerKeystroke, 3000, {
+  leading: true,
+  trailing: true,
+})
 
 // Return a list of people who have typed in the last 4 seconds
 export function currentlyTyping(room: null | Room) {
