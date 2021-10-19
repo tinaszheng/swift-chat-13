@@ -22,7 +22,6 @@ export type Author = {
   id: string
   name: string
   avatarUrl: string
-  lastLogin?: number // ms since epoch
 }
 
 export type MessageBlock = {

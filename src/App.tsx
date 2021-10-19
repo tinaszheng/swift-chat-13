@@ -6,7 +6,7 @@ import './App.css'
 import styled from '@emotion/styled'
 import { css } from '@emotion/css'
 import GreenDot from './shared/GreenDot'
-import { groupByAuthor, currentlyTyping, onlineUserIds } from './shared/util'
+import { groupByAuthor, currentlyTyping } from './shared/util'
 import MessageBlock from './shared/MessageBlock'
 import { User, listenForLogin, firebaseLogout, getUser } from './network/users'
 import Login from './shared/Login'
@@ -20,12 +20,12 @@ import {
 } from './network/rooms'
 import { Room } from './shared/types'
 import { throttle } from 'lodash'
+import { listenForPresence, registerPresence } from './network/presence'
 
 const CACHED_USER_KEY = 'CACHED_USER_KEY'
 const ROOM_ID = 'wildest-dreams'
 
-let TYPING_TIMEOUT_ID: number
-let PRESENCE_TIMEOUT_ID: number
+let TYPING_TIMEOUT_ID: any
 
 const throttledRegisterKeystroke = throttle(registerKeystroke, 3000, {
   leading: true,
@@ -58,11 +58,15 @@ function App() {
         id: user.id,
         name: user.name,
         avatarUrl: user.avatarUrl,
-        lastLogin: Date.now(),
       })
+      registerPresence(user.id)
     })
 
     setIsLoading(false)
+  }, [])
+
+  useEffect(() => {
+    listenForPresence((userIds) => setNumOnline(userIds.length))
   }, [])
 
   useEffect(() => listenRoom(ROOM_ID, setRoom), [])
@@ -73,19 +77,12 @@ function App() {
     const typingIndicator = currentlyTyping(roomRef.current, user?.id)
     setTypingIndicator(typingIndicator)
     if (typingIndicator) {
-      TYPING_TIMEOUT_ID = window.setTimeout(rerenderTypingIndicator, 1000)
+      TYPING_TIMEOUT_ID = setTimeout(rerenderTypingIndicator, 1000)
     }
   }
-  useEffect(rerenderTypingIndicator, [room?.lastKeystrokes])
 
-  // Once called, rerun every 10s forever
-  function rerenderPresence() {
-    clearTimeout(PRESENCE_TIMEOUT_ID)
-    const online = onlineUserIds(roomRef.current, user?.id)
-    setNumOnline(online.length)
-    PRESENCE_TIMEOUT_ID = window.setTimeout(rerenderPresence, 10 * 1000)
-  }
-  useEffect(rerenderPresence, [room?.lastKeystrokes, room?.users])
+  // Whenever lastKeystrokes change, start rerendering typing indicator
+  useEffect(rerenderTypingIndicator, [room?.lastKeystrokes])
 
   const sortedMessages = Object.values(room?.messages || {}).sort(
     (a, b) => a.timestamp - b.timestamp
