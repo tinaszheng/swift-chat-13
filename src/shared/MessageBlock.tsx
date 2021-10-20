@@ -100,8 +100,8 @@ const Container = styled.div`
   align-items: flex-end;
 
   img {
-    height: 25px;
-    width: 25px;
+    height: 35px;
+    width: 35px;
     border-radius: 50%;
     object-fit: cover;
   }
@@ -116,6 +116,7 @@ const Bubble = styled.div`
   border-radius: 30px;
   padding: 10px 12px;
   text-align: left;
+  white-space: pre-wrap;
 `
 
 const Bubbles = styled.div`

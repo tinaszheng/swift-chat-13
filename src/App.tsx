@@ -90,12 +90,13 @@ function App() {
   const groupedMessages = groupByAuthor(sortedMessages)
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (!e.shiftKey && e.key === 'Enter') {
+      e.preventDefault();
       onSubmit()
     }
   }
 
-  const onChatInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onChatInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setCurrMessage(e.target.value)
     throttledRegisterKeystroke(ROOM_ID, user?.id || '')
   }
@@ -106,6 +107,8 @@ function App() {
   }
 
   const onSubmit = () => {
+    if (!currMessage) return; 
+    
     createMessage(ROOM_ID, {
       id: Date.now().toString(),
       text: currMessage,
@@ -165,12 +168,12 @@ function App() {
           <div>
             <Title>the taylor swift virtual clubhouse</Title>
             <Online>
-              <GreenDot /> {numOnline} swifties online &nbsp; {typingIndicator}
+              <GreenDot /> {numOnline} swifties online
             </Online>
           </div>
-          <EditProfileButton onClick={showEditProfile}>
+          {user && <EditProfileButton onClick={showEditProfile}>
             <img src={user?.avatarUrl} alt="edit your profile" />
-          </EditProfileButton>
+          </EditProfileButton>}
         </Header>
         <ScrollToBottom className={chat}>
           {groupedMessages.map((messageBlock) => (
@@ -181,9 +184,11 @@ function App() {
               messageBlock={messageBlock}
             />
           ))}
+          <TypingIndicator>{typingIndicator}</TypingIndicator>
         </ScrollToBottom>
         <InputContainer>
-          <input
+          <textarea
+            rows={1}
             placeholder="Send a message"
             onKeyDown={handleKeyDown}
             value={currMessage}
@@ -216,6 +221,17 @@ const Title = styled.div`
   margin-bottom: 5px;
 `
 
+const TypingIndicator = styled.div`
+  position: absolute;
+  bottom: 5px;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #7d7c7c;
+`;
+
 const Online = styled.div`
   display: flex;
   flex-flow: row;
@@ -235,7 +251,7 @@ const chat = css`
     flex-flow: column;
   }
 
-  padding-bottom: 20px;
+  padding-bottom: 25px;
 `
 
 const EditProfileButton = styled.button`
@@ -255,7 +271,7 @@ const InputContainer = styled.div`
   padding: 10px;
   display: flex;
 
-  > input {
+  > textarea {
     background-color: white;
     font-size: 14px;
     border-radius: 30px;
