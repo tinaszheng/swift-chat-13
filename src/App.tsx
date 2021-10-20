@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 
 // @ts-ignore
 import ScrollToBottom from 'react-scroll-to-bottom'
@@ -19,11 +19,13 @@ import {
   registerUser,
 } from './network/rooms'
 import { Room } from './shared/types'
-import { throttle } from 'lodash'
+import { throttle, sum } from 'lodash'
 import { listenForPresence, registerPresence } from './network/presence'
+import defaultPlaylist, { getPlaylistOffset, getVideoAndOffset } from './playlists';
 
 const CACHED_USER_KEY = 'CACHED_USER_KEY'
 const ROOM_ID = 'wildest-dreams'
+const PLAYLIST_START_TIME_EPOCH = 1634760712046;
 
 let TYPING_TIMEOUT_ID: any
 
@@ -39,11 +41,83 @@ function App() {
   const [typingIndicator, setTypingIndicator] = useState('')
   const [user, setUser] = useState<null | User>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [playlist, setPlaylist] = useState(defaultPlaylist);
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [room, setRoom] = useState<null | Room>(null)
+  const [currTimeout, setCurrTimeout] = useState<any>(null);
   // We need a ref to use room in closures (e.g. for setTimeout)
   const roomRef = useRef(room)
   roomRef.current = room
+
+  const [currVideo, setCurrVideo] = useState({
+    url: "",
+    name: "",
+    offset: 0,
+    index: 0,
+  });
+
+  const videoRef = useRef(currVideo);
+  videoRef.current = currVideo;
+
+  const nextVideo = () => {
+    let videoLength;
+    
+    // at the end of the playlist, go back to beginning
+    const video = videoRef.current;
+    if (video.index === playlist.length - 1) {
+      const first = playlist[0];
+      setCurrVideo({
+        url: first.url,
+        offset: 0,
+        index: 0,
+        name: first.name,
+      });
+
+      videoLength = first.length;
+      console.log("0 now playing: ", first.name);
+    } else {
+      const next = playlist[video.index + 1];
+      setCurrVideo({
+        url: next.url,
+        offset: 0,
+        index: video.index + 1,
+        name: next.name,
+      });
+
+      videoLength = next.length;
+      console.log("1 now playing: ", next.name);
+    };
+
+    console.log("next in ", videoLength, " seconds");
+    setCurrTimeout(setTimeout(nextVideo, videoLength * 1000));
+  };
+
+  useEffect(() => {
+    console.log('CurrVideo Updated', currVideo);
+  }, [currVideo]);
+
+  useEffect(() => {
+    console.log("calling useEffect");
+    const playlistTotal = sum(playlist.map(p => p.length));
+    const playlistOffset = getPlaylistOffset(PLAYLIST_START_TIME_EPOCH, playlistTotal);
+    const [video, index, offset] = getVideoAndOffset(playlist, playlistOffset);
+    
+    setCurrVideo({
+      url: video.url,
+      offset: offset,
+      index,
+      name: video.name
+    });
+
+    const timeRemaining = video.length - offset; // in seconds
+
+    console.log("currently playing: ", video.name);
+    console.log("next in ", timeRemaining, " seconds");
+    setCurrTimeout(setTimeout(nextVideo, timeRemaining * 1000));
+    return () => {
+      clearTimeout(currTimeout);
+    };
+  }, [playlist]);
 
   useEffect(() => {
     const cachedUser = localStorage.getItem(CACHED_USER_KEY)
@@ -108,7 +182,7 @@ function App() {
 
   const onSubmit = () => {
     if (!currMessage) return; 
-    
+
     createMessage(ROOM_ID, {
       id: Date.now().toString(),
       text: currMessage,
@@ -152,17 +226,17 @@ function App() {
         }}
         user={userProfile}
       />
-      <div className="video">
+      <Video>
         <iframe
           width="100%"
           height="100%"
-          src="https://www.youtube-nocookie.com/embed/videoseries?list=PLD9KBjmKSTfEM6LsQgu2aY7CQcSOSWARL&autoplay=1&start=5"
+          src={`${currVideo.url}?&autoplay=1&start=${currVideo.offset}`}
           title="YouTube video player"
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         ></iframe>
-      </div>
+      </Video>
       <Right>
         <Header>
           <div>
@@ -281,5 +355,9 @@ const InputContainer = styled.div`
     flex: 1;
   }
 `
+
+const Video = styled.div`
+  // pointer-events: none;
+`;
 
 export default App
