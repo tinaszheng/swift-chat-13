@@ -2,9 +2,6 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 
 // @ts-ignore
 import ScrollToBottom from 'react-scroll-to-bottom'
-// @ts-ignore
-// import YouTubePlayer from 'youtube-player';
-
 import Youtube from 'react-youtube';
 
 import './App.css'
