@@ -2,6 +2,11 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 
 // @ts-ignore
 import ScrollToBottom from 'react-scroll-to-bottom'
+// @ts-ignore
+// import YouTubePlayer from 'youtube-player';
+
+import Youtube from 'react-youtube';
+
 import './App.css'
 import styled from '@emotion/styled'
 import { css } from '@emotion/css'
@@ -20,6 +25,10 @@ import {
 } from './network/rooms'
 import { Room } from './shared/types'
 import { throttle, sum } from 'lodash'
+
+import mute from './images/mute.svg';
+import unmute from './images/unmute.svg';
+
 import { listenForPresence, registerPresence } from './network/presence'
 import defaultPlaylist, { getPlaylistOffset, getVideoAndOffset } from './playlists';
 
@@ -35,7 +44,8 @@ const throttledRegisterKeystroke = throttle(registerKeystroke, 3000, {
 })
 
 function App() {
-  const [numOnline, setNumOnline] = useState(15)
+  const [numOnline, setNumOnline] = useState(0)
+  const [player, setPlayer] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<User | null>(null)
   const [currMessage, setCurrMessage] = useState('')
   const [typingIndicator, setTypingIndicator] = useState('')
@@ -45,6 +55,8 @@ function App() {
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [room, setRoom] = useState<null | Room>(null)
   const [currTimeout, setCurrTimeout] = useState<any>(null);
+  const [isMuted, setIsMuted] = useState(true);
+
   // We need a ref to use room in closures (e.g. for setTimeout)
   const roomRef = useRef(room)
   roomRef.current = room
@@ -54,14 +66,19 @@ function App() {
     name: "",
     offset: 0,
     index: 0,
+    id: "",
+    startMuted: true,
   });
 
   const videoRef = useRef(currVideo);
   videoRef.current = currVideo;
 
+  const mutedRef = useRef(isMuted);
+  mutedRef.current = isMuted;
+
   const nextVideo = () => {
     let videoLength;
-    
+
     // at the end of the playlist, go back to beginning
     const video = videoRef.current;
     if (video.index === playlist.length - 1) {
@@ -71,10 +88,11 @@ function App() {
         offset: 0,
         index: 0,
         name: first.name,
+        id: first.id,
+        startMuted: mutedRef.current,
       });
 
       videoLength = first.length;
-      console.log("0 now playing: ", first.name);
     } else {
       const next = playlist[video.index + 1];
       setCurrVideo({
@@ -82,22 +100,17 @@ function App() {
         offset: 0,
         index: video.index + 1,
         name: next.name,
+        id: next.id,
+        startMuted: mutedRef.current,
       });
 
       videoLength = next.length;
-      console.log("1 now playing: ", next.name);
     };
 
-    console.log("next in ", videoLength, " seconds");
     setCurrTimeout(setTimeout(nextVideo, videoLength * 1000));
   };
 
   useEffect(() => {
-    console.log('CurrVideo Updated', currVideo);
-  }, [currVideo]);
-
-  useEffect(() => {
-    console.log("calling useEffect");
     const playlistTotal = sum(playlist.map(p => p.length));
     const playlistOffset = getPlaylistOffset(PLAYLIST_START_TIME_EPOCH, playlistTotal);
     const [video, index, offset] = getVideoAndOffset(playlist, playlistOffset);
@@ -106,13 +119,12 @@ function App() {
       url: video.url,
       offset: offset,
       index,
-      name: video.name
+      name: video.name,
+      id: video.id,
+      startMuted: mutedRef.current,
     });
 
     const timeRemaining = video.length - offset; // in seconds
-
-    console.log("currently playing: ", video.name);
-    console.log("next in ", timeRemaining, " seconds");
     setCurrTimeout(setTimeout(nextVideo, timeRemaining * 1000));
     return () => {
       clearTimeout(currTimeout);
@@ -189,7 +201,7 @@ function App() {
       timestamp: Date.now(),
       author: {
         id: user?.id || '0',
-        name: user?.name || 'blonde fan 13',
+        name: user?.name || 'blondie fan 13',
         avatarUrl:
           user?.avatarUrl ||
           'https://i.pinimg.com/736x/56/41/94/56419465c8df9148f4851bc61232f314.jpg',
@@ -199,14 +211,32 @@ function App() {
     setCurrMessage('')
   }
 
-  const onLogOut = () => {
-    firebaseLogout()
-    setUser(null)
-  }
-
   const showEditProfile = () => {
     setIsEditingProfile(true)
   }
+
+  const onMuteClick =  async () => {
+    if (!player) return;
+
+    if (player.isMuted()) {
+      player.unMute();
+      setIsMuted(false);
+    } else {
+      player.mute();
+      setIsMuted(true);
+    }
+  }
+
+  const onPlayerReady = (event: any) => {
+    setPlayer(event.target);
+  }
+
+  useEffect(() => {
+    if (!player) return;
+
+    setIsMuted(player.isMuted());
+  }, [player])
+
 
   return (
     <div className="App">
@@ -227,22 +257,23 @@ function App() {
         user={userProfile}
       />
       <Video>
-        <iframe
-          width="100%"
-          height="100%"
-          src={`${currVideo.url}?&autoplay=1&start=${currVideo.offset}`}
-          title="YouTube video player"
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        ></iframe>
+        <VideoLayover>
+          <div>now playing: {currVideo.name}</div>
+          {player && <button onClick={onMuteClick}><img style={ isMuted ? {  backgroundColor: "#C4C4C4", borderRadius: "50%"} : undefined} src={mute} alt="unmute" /></button>}
+        </VideoLayover>
+        <Youtube 
+          videoId={currVideo.id}
+          opts={{ height: '100%', width: "100%", playerVars: { autoplay: 1, controls: 0, mute: currVideo.startMuted ? 1 : 0, start: currVideo.offset, modestbranding: 1}}}
+          onReady={onPlayerReady}
+          containerClassName="player-container"
+        />
       </Video>
       <Right>
         <Header>
           <div>
             <Title>the taylor swift virtual clubhouse</Title>
             <Online>
-              <GreenDot /> {numOnline} swifties online
+              <GreenDot /> {numOnline} {numOnline === 1 ? "swiftie" : "swifties"} online
             </Online>
           </div>
           {user && <EditProfileButton onClick={showEditProfile}>
@@ -357,7 +388,56 @@ const InputContainer = styled.div`
 `
 
 const Video = styled.div`
-  // pointer-events: none;
+  position: relative;
+
+  iframe {
+    pointer-events: none;
+    height: 100%;
+    width: 100%;
+  }
+
+  > .player-container {
+    height: 100%;
+    width: 100%;
+  }
+`;
+
+const VideoLayover = styled.div`
+  width: 100%;
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  box-sizing: border-box;
+
+  padding: 20px;
+  color: white;
+
+  img {
+    height: 35px;
+    width: 35px;
+    margin-right: -8px;
+    padding: 8px;
+  }
+
+  button {
+    border: none;
+    background: none;
+    cursor: pointer;
+
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    justify-content: center;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  justify-content: space-between;
 `;
 
 export default App
